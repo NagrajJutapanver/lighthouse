@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Keeper of the Light</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Karla:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root { --cream: #f6eddc; --amber: #f4b942; }
+* { box-sizing: border-box; margin: 0; }
+html { scroll-behavior: smooth; }
+body { background: #0a1730; color: var(--cream); font: 1.2rem/1.7 "Karla", system-ui, sans-serif; overflow-x: hidden; }
+:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+
+#bar { position: fixed; top: 0; left: 0; height: 4px; width: 0; background: var(--amber); z-index: 10; }
+
+/* Intro */
+.intro { min-height: 100vh; display: grid; place-content: center; text-align: center; padding: 2rem;
+  background: linear-gradient(#050c1a, #0a1730); }
+.intro h1 { font: 400 clamp(2.8rem, 9vw, 6rem)/1.05 "Young Serif", Georgia, serif; }
+.intro p { margin-top: 1.25rem; opacity: .75; }
+.intro .hint { margin-top: 3rem; font-size: 1rem; animation: bob 2.2s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(8px); } }
+
+/* Scenes */
+.scene { position: relative; height: 100vh; min-height: 620px; overflow: hidden;
+  background: linear-gradient(var(--sky1), var(--sky2)); color: var(--ink, var(--cream)); }
+.layer { position: absolute; left: 0; right: 0; will-change: transform; }
+.layer svg { width: 100%; height: 100%; display: block; }
+.l-sky { top: -40vh; bottom: -40vh; }
+.l-ground { top: 0; bottom: -25vh; }
+
+.night { --sky1: #0a1730; --sky2: #1d3a5c; --far: #11263f; --mid: #0c1d33; --sea: #12395a; --cliff: #060f1c; --ship: #060f1c; --sail: #cdbf9f; }
+.storm { --sky1: #0c121b; --sky2: #2b3645; --far: #19222f; --mid: #121a25; --sea: #1a2c3d; --cliff: #05090f; --ship: #05090f; --sail: #8a8f95; }
+.lamp  { --sky1: #070d1a; --sky2: #1a2f4c; --far: #0d1c30; --mid: #09152a; --sea: #0e2c4a; --cliff: #04080f; --ship: #04080f; --sail: #a99f86; }
+.dawn  { --sky1: #4f7fa6; --sky2: #f6c9a0; --far: #6d89a3; --mid: #4b6a86; --sea: #3e6e8e; --cliff: #1d2f40; --ship: #1d2f40; --sail: #fbf3e4; --ink: #0d1b2b; }
+
+.far { fill: var(--far); } .mid { fill: var(--mid); } .sea { fill: var(--sea); }
+.cliff { fill: var(--cliff); } .hull { fill: var(--ship); } .sail { fill: var(--sail); }
+.glow { fill: var(--amber); }
+.dawn .glow { fill: #fff4d6; }
+.beam { animation: pulse 5s ease-in-out infinite; transform-origin: 930px 342px; }
+@keyframes pulse { 50% { opacity: .55; } }
+
+.text { position: absolute; z-index: 2; top: 14vh; left: clamp(1.5rem, 7vw, 6rem); max-width: 30rem; opacity: 0; transform: translateY(24px);
+  transition: opacity .9s, transform .9s; }
+.text.in { opacity: 1; transform: none; }
+.text .ch { font-size: .95rem; opacity: .7; margin-bottom: .5rem; }
+.text h2 { font: 400 clamp(2rem, 5vw, 3.2rem)/1.1 "Young Serif", Georgia, serif; margin-bottom: 1rem; }
+.text p { text-shadow: 0 1px 12px rgba(0,0,0,.25); }
+
+.end { min-height: 80vh; display: grid; place-content: center; text-align: center; gap: 1.5rem; padding: 2rem;
+  background: linear-gradient(#1d2f40, #0a1730); }
+.end h2 { font: 400 clamp(2.4rem, 7vw, 4rem)/1.1 "Young Serif", Georgia, serif; }
+.end a { color: var(--amber); }
+
+@media (max-width: 600px) { .text { top: 9vh; right: 1.5rem; } }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; } .beam, .hint { animation: none; }
+  .text { transition: none; opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body>
+<div id="bar" aria-hidden="true"></div>
+
+<header class="intro">
+  <h1>The Keeper<br>of the Light</h1>
+  <p>A short story. Scroll to read.</p>
+  <p class="hint" aria-hidden="true">↓</p>
+</header>
+
+<main id="story"></main>
+
+<footer class="end">
+  <h2>The end.</h2>
+  <p><a href="#" id="again">Read it again</a></p>
+</footer>
+
+<script>
+const scenes = [
+  { cls: "night", n: "Chapter 1", title: "112 steps",
+    text: "Every evening at sunset, Mara climbed the 112 steps to the top of the lighthouse and lit the lamp. Nobody had thanked her in years. The sea didn't even know her name.",
+    stars: true, moon: true },
+  { cls: "storm", n: "Chapter 2", title: "The longest night",
+    text: "On the longest night of winter, the fog rolled in thick as wool. Far out on the water, a ship's horn sounded, low and lost.",
+    clouds: true, ship: [360, 668, 0.6] },
+  { cls: "lamp", n: "Chapter 3", title: "Keep it burning",
+    text: "The wind tore at the windows. Mara wound the lamp by hand until her arms shook. The beam swung out across the waves, again and again.",
+    stars: true, clouds: true, beam: true, ship: [520, 676, 0.9] },
+  { cls: "dawn", n: "Chapter 4", title: "Morning",
+    text: "At first light the ship slipped past the rocks, safe. A sailor waved at the tower. Mara waved back, and for the first time in years, someone knew her name.",
+    sun: true, ship: [640, 690, 1.3] }
+];
+
+// deterministic star positions
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+function skySVG(s) {
+  let out = "";
+  if (s.stars) for (let i = 0; i < 90; i++)
+    out += `<circle cx="${rnd()*1200|0}" cy="${100+rnd()*500|0}" r="${(0.6+rnd()*1.4).toFixed(1)}" fill="#f6eddc" opacity="${(0.4+rnd()*0.6).toFixed(2)}"/>`;
+  if (s.moon) out += `<circle cx="480" cy="260" r="46" fill="#f6eddc"/><circle cx="500" cy="248" r="40" fill="#10264a" opacity=".18"/>`;
+  if (s.sun) out += `<circle cx="640" cy="560" r="90" fill="#fff0cf" opacity=".9"/>`;
+  if (s.clouds) out += [[200,230,170,34],[620,180,220,40],[980,260,190,36],[420,360,200,30]]
+    .map(c => `<ellipse cx="${c[0]}" cy="${c[1]}" rx="${c[2]}" ry="${c[3]}" fill="#000" opacity=".28"/>`).join("");
+  return `<svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">${out}</svg>`;
+}
+
+function seaSVG(s, id) {
+  const ship = s.ship ? `<g transform="translate(${s.ship[0]} ${s.ship[1]}) scale(${s.ship[2]})">
+    <path class="hull" d="M-40 0H40L28 18H-28Z"/><rect class="hull" x="-1.5" y="-60" width="3" height="60"/>
+    <path class="sail" d="M3 -58L36 -8H3Z"/></g>` : "";
+  return `<svg viewBox="0 0 1200 800" preserveAspectRatio="xMaxYMax slice">
+    <path class="sea" d="M0 660Q150 648 300 660T600 660T900 660T1200 660V800H0Z"/>${ship}</svg>`;
+}
+
+function hillsSVG(cls, d) {
+  return `<svg viewBox="0 0 1200 800" preserveAspectRatio="xMaxYMax slice"><path class="${cls}" d="${d}"/></svg>`;
+}
+
+function cliffSVG(s, id) {
+  const beam = s.beam ? `<defs><linearGradient id="g${id}" x1="1" x2="0">
+      <stop offset="0" stop-color="#f4b942" stop-opacity=".85"/><stop offset="1" stop-color="#f4b942" stop-opacity="0"/></linearGradient></defs>
+    <polygon class="beam" points="930,342 -400,230 -400,450" fill="url(#g${id})"/>` : "";
+  return `<svg viewBox="0 0 1200 800" preserveAspectRatio="xMaxYMax slice">${beam}
+    <path class="cliff" d="M620 800L700 640Q800 590 880 575H980Q1100 590 1200 640V800Z"/>
+    <polygon fill="#f6eddc" points="906,575 954,575 944,365 916,365"/>
+    <polygon fill="#b4413a" points="910,520 950,520 948,470 912,470"/>
+    <polygon fill="#b4413a" points="914,430 946,430 944,390 916,390"/>
+    <rect class="cliff" x="906" y="357" width="48" height="8"/>
+    <rect class="glow" x="916" y="327" width="28" height="30"/>
+    <polygon class="cliff" points="912,327 948,327 930,305"/></svg>`;
+}
+
+const FAR = "M0 600L120 520L260 590L420 480L600 590L760 530L900 600L1200 540V800H0Z";
+const MID = "M0 650Q200 590 400 640T800 630T1200 620V800H0Z";
+
+const story = document.getElementById("story");
+story.innerHTML = scenes.map((s, i) => `
+  <section class="scene ${s.cls}" aria-labelledby="t${i}">
+    <div class="layer l-sky" data-speed="0.4" aria-hidden="true">${skySVG(s)}</div>
+    <div class="layer l-ground" data-speed="0.22" aria-hidden="true">${hillsSVG("far", FAR)}</div>
+    <div class="layer l-ground" data-speed="0.12" aria-hidden="true">${hillsSVG("mid", MID)}</div>
+    <div class="layer l-ground" data-speed="0.04" aria-hidden="true">${seaSVG(s, i)}</div>
+    <div class="layer l-ground" data-speed="0.02" aria-hidden="true">${cliffSVG(s, i)}</div>
+    <div class="text" data-speed="-0.15">
+      <p class="ch">${s.n}</p><h2 id="t${i}">${s.title}</h2><p>${s.text}</p>
+    </div>
+  </section>`).join("");
+
+// Parallax: each layer drifts at its own speed as its scene crosses the screen
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const sections = [...document.querySelectorAll(".scene")];
+const bar = document.getElementById("bar");
+let ticking = false;
+
+function update() {
+  const vh = innerHeight;
+  if (!reduce) sections.forEach(sec => {
+    const r = sec.getBoundingClientRect();
+    if (r.bottom < -vh || r.top > 2 * vh) return;
+    const off = r.top + r.height / 2 - vh / 2;
+    sec.querySelectorAll("[data-speed]").forEach(el => {
+      el.style.transform = `translate3d(0, ${(off * el.dataset.speed).toFixed(1)}px, 0)`;
+    });
+  });
+  const max = document.documentElement.scrollHeight - vh;
+  bar.style.width = (max > 0 ? scrollY / max * 100 : 0) + "%";
+  ticking = false;
+}
+addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+addEventListener("resize", update);
+update();
+
+// Fade each chapter's text in when it comes into view
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) e.target.classList.add("in");
+}), { threshold: 0.5 });
+sections.forEach(s => io.observe(s));
+
+document.getElementById("again").addEventListener("click", e => {
+  e.preventDefault(); scrollTo({ top: 0 });
+});
+</script>
+</body>
+</html>
